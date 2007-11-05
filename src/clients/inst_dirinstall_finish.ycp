@@ -12,7 +12,7 @@
  *
  */
 {
-    textdomain "packager";
+    textdomain "dirinstall";
     import "DirInstall";
     import "Installation";
     import "Directory";

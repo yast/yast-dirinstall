@@ -4,12 +4,12 @@
  * Summary:	Installation into  a directory
  * Authors:	Anas Nashif <nashif@suse.de>
  *
- * $Id:$
+ * $Id$
  *
  */
 
 {
-    textdomain "packager";
+    textdomain "dirinstall";
 
     import "Mode";
     Mode::SetMode ("autoinst_config");	// FIXME, messy

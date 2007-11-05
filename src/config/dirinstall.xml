@@ -6,7 +6,7 @@
     <!--
     $Id$
     Work around for the text domain
-    textdomain="packager"
+    textdomain="dirinstall"
     -->
 
     <textdomain>packager</textdomain>
