@@ -2,7 +2,7 @@
 # Makefile.am for tune/idedma/src
 #
 
-yncludedir = @yncludedir@/checkmedia
+yncludedir = @yncludedir@/dirinstall
 
 ynclude_DATA =			\
 	ui.ycp

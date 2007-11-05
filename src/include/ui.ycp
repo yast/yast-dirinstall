@@ -1,482 +1,90 @@
 /**
- * File:
- *   include/checkmedia/ui.ycp
+ * File:	packager/inst_dir/instintodir.ycp
+ * Module:	System installation
+ * Summary:	Installation into  a directory
+ * Authors:	Anas Nashif <nashif@suse.de>
  *
- * Summary:
- *   User interface functions for checking media integrity
- *
- * Authors:
- *   Ladislav Slezak <lslezak@suse.cz>
- *
- * $Id$
- *
- * All user interface functions.
+ * $Id:$
  *
  */
 
 {
-
-textdomain "packager";
-
-import "Wizard";
-import "CheckMedia";
-
-import "Popup";
-import "Label";
-import "Sequencer";
-import "String";
-import "Stage";
-import "PackageSystem";
-import "GetInstArgs";
-
-define list<term> CDdevices(string preferred) {
-    list<map> cds = (list<map>)SCR::Read(.probe.cdrom);
-    list<term> ret = [];
-
-    if (cds != nil)
-    {
-	foreach(map cd, cds, {
-		string dev = cd["dev_name"]:"";
-		string model = cd["model"]:"";
-		boolean deflt = (preferred == dev);
-
-		if (dev != nil && dev != "" && model != nil)
-		{
-		    ret = add(ret, `item(`id(dev), model + sformat(" (%1)", dev), deflt));
-		}
-	    }
-	);
-    }
-
-    return ret;
-}
-
-define void SetButtonState(boolean running) {
-    UI::ChangeWidget(`id(`stop), `Enabled, running);
-    UI::ChangeWidget(`id(`progress), `Enabled, running);
-    UI::ChangeWidget(`id(`next), `Enabled, !running);
-    UI::ChangeWidget(`id(`start), `Enabled, !running);
-    UI::ChangeWidget(`id(`back), `Enabled, !running);
-}
-
-define list<string> TranslateInfo(list<string> info) {
-    list<string> ret = [];
-
-    if (info != nil)
-    {
-	foreach(string i, info, {
-		list<string> parts = splitstring(i, ":");
-
-		string key = String::CutBlanks(parts[0]:"");
-		string val = String::CutBlanks(parts[1]:"");
-
-		map<string,string> trasmap = $[
-		    // rich text message, %1 = CD identification
-		    "app" : ("<BIG><B>%1</B></BIG>"),
-		    // rich text message, %1 medium number, e.g. CD1,CD2...
-		    "media" : _("<UL><LI>Medium: %1</LI></UL>"),
-		    // rich text message, %1 = size of the medium
-		    "size" : _("<UL><LI>Size: %1</LI></UL>"),
-		    // rich text message, %1 = result of the check
-		    "check" : _("<UL><LI>Result: %1</LI></UL>"),
-		    // rich text -  error message
-		    "not an iso" : _("The drive does not contain a medium or the ISO file system is broken.")
-		];
-
-		if (key == "check")
-		{
-		    // try to translate result string
-		    // correct MD5
-		    if (val == "md5sum ok")
-		    {
-			// result of the check - success
-			val = _("<B>OK</B>");
-		    }
-		    else if (val == "md5sum wrong")
-		    {
-			// wrong MD5
-			val = _("<B>Error</B> -- MD5 sum does not match<BR>This medium should not be used.");
-		    }
-		    else if (val == "md5sum not checked")
-		    {
-			// the correct MD5 is unknown
-			val = _("<B>Unknown</B> -- The correct MD5 sum of the medium is unknown.");
-		    }
-		    // progress output
-		    else if (issubstring(val, "%\b\b\b\b"))
-		    {
-			key = "";
-			y2milestone("Ignoring progress output: %1", mergestring(splitstring(val, "\b"), "\\b"));
-		    }
-		}
-		// don't print MD5 sum (it doesn't help user)
-		else if (key == "md5")
-		{
-		    y2milestone("Expected MD5 of the medium: %1", val);
-		    key = "";
-		}
-
-		string newstr = trasmap[key]:"";
-
-		if (newstr != nil && newstr != "")
-		{
-		    newstr = sformat(newstr, val);
-
-		    ret = add(ret, newstr);
-		}
-	    }
-	);
-    }
-
-    y2milestone("Translated info: %1", ret);
-
-    return ret;
-}
-
-// mount CD drive and check whether there is directory 'media.1' (the first medium) and 'boot' (bootable product CD)
-define boolean InsertedCD1() {
-    boolean ret = true;
-    string instmode = (string)SCR::Read(.etc.install_inf.InstMode);
-
-    if (instmode == "cd" || instmode == "dvd")
-    {
-	string cdrom_device = (string) SCR::Read(.etc.install_inf.Cdrom);
-
-	// bugzilla #305495
-	if (cdrom_device == nil || cdrom_device == "") {
-	    y2error ("No Cdrom present in install.inf");
-	    // try to recover
-	    return true;
-	}
-
-	// get CD device name
-	string bootcd = "/dev/" + cdrom_device;
-
-	// is the device mounted?
-	list<map> mounts = (list<map>)SCR::Read(.proc.mounts);
-	map<string,string> mnt = listmap(map m, mounts, {return $[m["spec"]:"" : m["file"]:""];});
-
-	string dir = "";
-	boolean mounted = false;
-
-	if (haskey(mnt, bootcd))
-	{
-	    dir = mnt[bootcd]:"";
-	}
-	else
-	{
-	    dir = (string)SCR::Read(.target.tmpdir) + "/YaST.mnt";
-	    SCR::Execute(.target.mkdir, dir);
-	    mounted = (boolean)SCR::Execute(.target.mount, [bootcd, dir], "-o ro");
-	}
-
-	// check for the first medium
-	integer succ = (integer)SCR::Execute(.target.bash, sformat("test -d %1/media.1 && test -d %1/boot", dir));
-
-	ret = (succ == 0);
-
-	// reset to the previous state
-	if (mounted)
-	{
-	    // unmount back
-	    boolean umnt = (boolean)SCR::Execute(.target.umount, dir);
-	    y2milestone("unmounted %1: %2", dir, umnt);
-	}
-    }
-
-    return ret;
-}
-
-define void RequireFirstMedium() {
-    while (!InsertedCD1())
-    {
-	// warning popup - the CD/DVD drive doesn't contain the first medium (CD1/DVD1)
-	if (Popup::AnyQuestion(Popup::NoHeadline(), _("Insert the first installation medium."),
-	    Label::OKButton(), Label::CancelButton(), `focus_yes) == false)
-	{
-	    break;
-	}
-    }
-}
-
-string log_content = "";
-
-void LogLine(string line)
-{
-    log_content = log_content + line;
-    UI::ChangeWidget(`id(`log), `Value, log_content);
-    y2debug("content: %1", log_content);
-}
-
-/**
- * Main dialog
- * @return symbol Result from UserInput()
- */
-define symbol MainDialog () {
-
-    string req_package = "checkmedia";
-
-    if (SCR::Read(.target.size, CheckMedia::checkmedia) < 0 &&
-	!PackageSystem::CheckAndInstallPackagesInteractive([req_package]))
-    {
-	return `abort;
-    }
-
-    // set wizard buttons at first
-    if (!CheckMedia::forced_start)
-    {
-	Wizard::SetNextButton(`next, Label::CloseButton());
-    }
-
-    // set buttons according to mode
-    if (!Stage::initial())
-    {
-	// remove Back button - workflow has only one dialog
-	Wizard::HideBackButton();
-	// remove Abort button - it's useless
-	Wizard::HideAbortButton();
-    }
-
-    // umount CD drives (release all sources)
-    if (Stage::initial())
-    {
-	// release all media
-	Pkg::SourceReleaseAll();
-    }
-
-    // dialog header
-    string caption = _("Media Check");
-
-    // help text - media check (header) 1/7
-    string help = _("<P><B>Media Check</B></P>") +
-    // help text - media check 2/7
-_("<P>When you have a problem with
-the installation and are using a CD or DVD installation medium, you should check
-whether the medium is broken.</P>
-") +
-
-    // help text - media check 3/7
-_("<P>Select a drive, insert a medium into the drive, and press <B>Start Check</B>
-to perform the check. The check can take several minutes depending on
-speed of the drive and size of the medium. The check verifies the MD5 checksum.</P>
-") +
-
-    // help text - media check 4/7
-_("<P>If the check of the medium fails, you should not continue the installation.
-It may fail or you may lose your data. You should replace the broken
-medium.</P>
-") +
-
-    // help text - media check 5/7
-_("After the check you can insert the next medium and start the procedure again.
-The order of the media is irrelevant.") +
-
-    // help text - media check 6/7
-_("<P><B>Note:</B> You cannot change the medium while it is used by the system. If
-it happens during installation, start the manual installation and select the media verification item in the menu.</P> 
-") +
-
-    // help text - media check 7/6
-_("<P>If you burn the media yourself, use the <B>pad</B> option in your recording software. It avoids read errors at the end of media during the check.</P>
-");
-
-// advice check of the media
-// for translators: split the message to more lines if needed, use max. 50 characters per line
-string label = _("It is recommended to check all installation media\nto avoid installation problems.");
-
-    term contents = `VBox(
-	// combobox label
-	CheckMedia::forced_start ? `VBox(`Left(`Label(label)), `VSpacing(0.6)) : `Empty(),
-	// combo box
-	`Left(`ComboBox(`id(`cddevices), _("&CD or DVD Drive"), CDdevices(CheckMedia::preferred_drive))),
-	`VSpacing(0.4),
-	// widget label
-	`Left(`Label(_("Status Information"))),
-	`RichText(`id(`log), `opt(`autoScrollDown), ""),
-	`VSpacing(0.4),
-	// progress bar label
-	`ProgressBar(`id(`progress), _("Progress")),
-	`VSpacing(1),
-	`HBox(
-	    // push button label
-	    `PushButton(`id(`start), _("&Start Check")),
-	    `HSpacing(2),
-	    // push button label
-	    `PushButton(`id(`stop), Label::CancelButton())
-	)//,
-//	`VSpacing(1)
-    );
-
-    Wizard::SetContents(caption,
-	contents,
-	help,
-	GetInstArgs::enable_back(), GetInstArgs::enable_next()
-    );
-
-    symbol ret = nil;
-    while (true)
-    {
-	// update state of the buttons (enabled/disabled)
-	SetButtonState(false);
-
-	ret = (symbol)UI::UserInput();
-
-	y2milestone("ui: %1", ret);
-
-	if (ret == `next || ret == `back)
-	{
-	    // avoid reproposing of the installation -  always return `back in
-	    // the initial mode when the module start wasn't forced (after
-	    // language selection)
-	    if (Stage::initial() && !CheckMedia::forced_start)
-	    {
-		ret = `back;
-	    }
-	    break;
-	}
-	else if (ret == `cancel)
-	{
-	    ret = `abort;
-	    break;
-	}
-	else if (ret == `abort)
-	{
-	    if (Popup::ConfirmAbort(`painless))
-	    {
-		ret = `abort;
-		break;
-	    }
-	}
-	else if (ret == `start)
-	{
-	    string selecteddrive = (string)UI::QueryWidget(`id(`cddevices), `Value);
-
-	    if (selecteddrive != nil && selecteddrive != "")
-	    {
-		SetButtonState(true);
-
-		y2milestone("starting media check at drive %1", selecteddrive);
-		// progress message, %1 is CD device name (e.g. /dev/hdc)
-		//UI::ChangeWidget(`id(`log), `LastLine, sformat(_("Check started (%1)...\n"), selecteddrive));
-
-		//LogLine(sformat(_("Check started (%1)...\n"), selecteddrive));
-
-		// try to read one byte from the medium
-		integer res = (integer)SCR::Execute(.target.bash, sformat("/usr/bin/head -c 1 %1 > /dev/null", selecteddrive));
-		if (res != 0)
-		{
-		    // error message: the medium cannot be read or no medium in the drive; %1 = drive, e.g. /dev/hdc
-		    LogLine(sformat(_("Cannot read medium in the drive %1."), selecteddrive));
-		}
-		else
-		{
-		    CheckMedia::Start(selecteddrive);
-
-		    boolean loop = true;
-		    boolean aborted = false;
-		    while(loop)
-		    {
-			CheckMedia::Process();
-
-			integer progress = CheckMedia::Progress();
-			list<string> data = CheckMedia::Info();
-
-			if (data != nil && size(data) > 0)
-			{
-			    data = TranslateInfo(data);
-
-			    // add new output to the log view
-			    string info = mergestring(data, "");
-			    LogLine(info);
-			}
-
-			if (progress > 0)
-			{
-			    UI::ChangeWidget(`id(`progress), `Value, progress);
-			}
-
-			symbol ui = (symbol)UI::PollInput();
-
-			loop = CheckMedia::Running();
-
-			if (ui == `stop || ui == `cancel)
-			{
-			    CheckMedia::Stop();
-			    loop = false;
-			    aborted = true;
-			}
-			else if (ui == `abort)
-			{
-			    if (Popup::ConfirmAbort(`painless))
-			    {
-				CheckMedia::Stop();
-
-				return `abort;
-			    }
-			}
-
-			// sleep for a while
-			sleep(200);
-		    }
-
-		    SetButtonState(false);
-
-		    if (aborted)
-		    {
-			// the check has been canceled
-			LogLine(sformat(_("<UL><LI>Result: %1</LI></UL>"), _("<B>Canceled</B>")));
-		    }
-		}
-
-		// add empty lines between checks
-		LogLine("<BR><BR>");
-		// set zero progress
-		UI::ChangeWidget(`id(`progress), `Value, 0);
-	    }
-	}
-	else
-	{
-	    y2warning("unknown UserInput: %1", ret);
-	}
-    };
-
-    if (Stage::initial())
-    {
-	// is the first medium in drive?
-	RequireFirstMedium();
-    }
-
-    return ret;
-}
-
-
-/**
- * Main workflow of the idedma configuration
- * @return any Result from WizardSequencer() function
- */
-define any MainSequence () ``{
-    map aliases =
-	$[
-	    "checkmedia" : ``(MainDialog()),
-	];
-
-    map sequence = $[
-	"ws_start" : "checkmedia",
-	"checkmedia" :
-	$[
-	    `abort	: `abort,
-	    `next	: `next
-	]
+    textdomain "packager";
+
+    import "Mode";
+    Mode::SetMode ("autoinst_config");	// FIXME, messy
+    import "Product";
+    Mode::SetMode ("normal");		// FIXME, messy
+    import "DirInstall";
+    import "ProductControl";
+
+    import "Installation";
+
+    import "Wizard";
+    import "Report";
+    import "Progress";
+
+define symbol Run () {
+    y2milestone("current mode: %1", Mode::mode());
+    DirInstall::InitProductControl ();
+    Installation::dirinstall_installing_into_dir = true;
+
+    Progress::NextStage();
+
+    // check the package manager target
+    Pkg::TargetFinish ();
+    string tmpdir = (string)SCR::Read (.target.tmpdir);
+    tmpdir = tmpdir + "/target";
+    SCR::Execute (.target.mkdir, tmpdir);
+    Pkg::TargetInit (tmpdir, true);
+
+    string wizard_mode = Mode::test () ? "installation" : Mode::mode ();
+
+    list<map> stage_mode = [$["stage": "normal",  "mode": wizard_mode ]];
+    ProductControl::AddWizardSteps(stage_mode);
+
+    // Do log Report messages by default (bug 180862)
+    Report::LogMessages(true);
+    Report::LogErrors(true);
+    Report::LogWarnings(true);
+
+    // calling inst_proposal
+
+    Installation::destdir = DirInstall::GetTarget();
+    y2debug("target dir: %1", Installation::destdir);
+
+    symbol ret = ProductControl::Run();
+
+    // display a progress during exit
+    list<string> stages =
+    [
+	// progress bar item
+	_("Finish the Package Manager"),
+	// progress bar item
+	_("Clean Up"),
     ];
 
-    Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("checkmedia");
+    list<string> stages2 =
+    [
+	// progress bar item
+	_("Finishing the Package Manager..."),
+	// progress bar item
+	_("Cleaning Up..."),
+    ];
 
-    any ret = Sequencer::Run(aliases, sequence);
+    // progres bar label
+    Progress::New (_("Finishing..."), " ", size(stages) - 1,
+	    // progres bar label
+	    stages, stages2, _("Please wait..."));
 
-    UI::CloseDialog();
+    Progress::NextStage();
+
+    Pkg::SourceFinishAll ();
+    Pkg::TargetFinish();
+    Installation::destdir = "/";
+
     return ret;
 }
 
 
-}
+} // EOF
