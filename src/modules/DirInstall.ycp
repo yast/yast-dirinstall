@@ -34,11 +34,9 @@ list<list<string> > filesystems = [
 
 list<string> mounted_fs = [];
 
-integer target_time = 0;
-
 global integer GetTargetChangeTime()
 {
-    return target_time;
+    return Installation::dirinstall_target_time;
 }
 
 global void SetTarget(string tgt)
@@ -46,7 +44,7 @@ global void SetTarget(string tgt)
     if (Installation::dirinstall_target != tgt)
     {
 	Installation::dirinstall_target = tgt;
-	target_time = time();
+	Installation::dirinstall_target_time = time();
     }
 }
 
