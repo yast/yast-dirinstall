@@ -1,8 +1,17 @@
 @HEADER-COMMENT@
 
 @HEADER@
-Requires:	yast2
-BuildRequires:	perl-XML-Writer update-desktop-files yast2 yast2-devtools yast2-testsuite
+# Installation::dirinstall_target
+Requires:	yast2 >= 2.16.7
+Requires:	yast2 yast2-country yast2-mouse yast2-packager yast2-runlevel
+
+BuildRequires:	yast2 >= 2.16.7
+BuildRequires:	perl-XML-Writer update-desktop-files yast2-devtools yast2-testsuite
+#BuildRequires:	docbook-xsl-stylesheets doxygen libxslt sgml-skel
+
+Provides:	/usr/share/YaST2/clients/dirinstall.ycp
+# Package-split
+Conflicts:	yast2-packager < 2.16.3
 
 BuildArchitectures:	noarch
 
@@ -23,9 +32,10 @@ Summary:	Configuration of dirinstall
 %defattr(-,root,root)
 %dir @yncludedir@/dirinstall
 @yncludedir@/dirinstall/*
-@clientdir@/dirinstall.ycp
-@clientdir@/dirinstall_*.ycp
-@moduledir@/Dirinstall.*
-@moduledir@/Dirinstall2.*
-@desktopdir@/dirinstall.desktop
+@yncludedir@/packager/*
+@clientdir@/*.ycp
+@moduledir@/*
+@desktopdir@/*.desktop
+%dir /usr/share/YaST2/control
+/usr/share/YaST2/control/*.xml
 %doc @docdir@

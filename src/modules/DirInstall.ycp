@@ -8,17 +8,17 @@
  *
  */
 {
-textdomain "packager";
+textdomain "dirinstall";
+
 module "DirInstall";
 import "Mode";
 import "Stage";
 import "HTML";
 import "ProductControl";
 import "String";
+import "Installation";
 
 global boolean runme_at_boot = false;
-string target = "/var/tmp/dirinstall";
-
 global boolean makeimage = false;
 global string image_dir = "";
 global string image_name = "";
@@ -26,8 +26,6 @@ global string image_name = "";
 
 global string dirinstall_control_file =
         "/usr/share/YaST2/control/dirinstall.xml";
-
-global boolean installing_into_dir = false;
 
 list<list<string> > filesystems = [
     ["/proc", "proc", "proc" ],
@@ -45,16 +43,16 @@ global integer GetTargetChangeTime()
 
 global void SetTarget(string tgt)
 {
-    if (target != tgt)
+    if (Installation::dirinstall_target != tgt)
     {
-	target = tgt;
+	Installation::dirinstall_target = tgt;
 	target_time = time();
     }
 }
 
 global string GetTarget()
 {
-    return target;
+    return Installation::dirinstall_target;
 }
 
 global void InitProductControl () {
@@ -67,7 +65,7 @@ global void InitProductControl () {
             y2error("control file %1 not found", ProductControl::custom_control_file );
         }
     } else {
-       installing_into_dir =false;
+       Installation::dirinstall_installing_into_dir =false;
     }
 
 
@@ -83,7 +81,7 @@ global string Propose()
     string color = "red";
     list<string> tmp = [];
     // Proposal for dirinstall installation
-    tmp = add (tmp, sformat (_("Target Directory: %1"), HTML::Colorize(DirInstall::target, color)));
+    tmp = add (tmp, sformat (_("Target Directory: %1"), HTML::Colorize(Installation::dirinstall_target, color)));
 
     // Proposal for backup during update
     tmp = add (tmp, sformat (_("Run YaST and SuSEconfig at First Boot: %1"), HTML::Colorize(DirInstall::runme_at_boot
@@ -103,7 +101,7 @@ global void MountFilesystems () {
 	string mp = descr[0]:"";
 	string dev = descr[1]:"";
 	string type = descr[2]:"";
-	mp = target + mp;
+	mp = Installation::dirinstall_target + mp;
 	WFM::Execute (.local.bash, sformat ("test -d '%1' || mkdir -p '%1'", String::Quote (mp)));
 	WFM::Execute (.local.bash, sformat ("/bin/mount -t %1 %2 '%3'",
 	    type, dev, String::Quote (mp)));
