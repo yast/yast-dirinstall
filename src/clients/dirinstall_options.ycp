@@ -14,6 +14,10 @@
     import "Installation";
     import "Wizard";
     import "Popup";
+    import "Label";
+    import "Profile";
+    import "AutoinstSoftware";
+    import "Report";
 
     // screen title for installation into directory options
     string title = _("Directory Install Options");
@@ -28,6 +32,18 @@
 				    `Left(`TextEntry(`id(`target), _("&Root Directory (not \"/\"):"), DirInstall::GetTarget())),
 						// check box
                                     `Left(`CheckBox(`id(`suseconfig), _("Run &YaST and SuSEconfig on First Boot"), DirInstall::runme_at_boot)),
+				    `Left(`CheckBox(`id(`use_autoyast), `opt (`notify), _("Get Software Selection from AutoYaST Profile"), DirInstall::use_autoyast_software)),
+				    `VSquash(
+                                        `HBox(
+                                                // text entry
+                                            `TextEntry(`id(`autoyast), _("&AutoYaST Profile"), DirInstall::autoyast_software),
+                                            `VBox(
+                                                `VSpacing(),
+                                                // push button
+                                                `Bottom(`PushButton(`id(`open_profile), Label::BrowseButton ()))
+                                                )
+                                            )
+                                        ),
 						// check box
                                     `Left(`CheckBox(`id(`makeimage), `opt(`notify), _("Create Ima&ge"), DirInstall::makeimage)),
 						// text entry
@@ -76,6 +92,9 @@ image, specify the name and the location in the respective fields.</p>
             UI::ChangeWidget(`id(`imagedir) , `Enabled, false);
             UI::ChangeWidget(`id(`open_dir) , `Enabled, false);
         }
+	boolean autoyast = (boolean)UI::QueryWidget (`id(`use_autoyast), `Value);
+	UI::ChangeWidget (`id(`autoyast), `Enabled, autoyast);
+	UI::ChangeWidget (`id(`open_profile), `Enabled, autoyast);
 	ret = Wizard::UserInput ();
 
 	if (ret == `abort && Popup::ConfirmAbort (`painless))
@@ -93,6 +112,16 @@ image, specify the name and the location in the respective fields.</p>
             }
             continue;
         }
+	if (ret == `open_profile)
+	{
+	    string current_file = (string)UI::QueryWidget (`id (`autoyast), `Value);
+	    any file = UI::AskForExistingFile (current_file, "*.xml", _("Select AutoYaST Profile"));
+            if (file != nil)
+            {
+                UI::ChangeWidget(`id(`autoyast), `Value, (string)file);
+            }
+            continue;
+	}
 	if (ret == `next)
 	{
 	    string target =(string) UI::QueryWidget (`id(`target), `Value);
@@ -100,6 +129,22 @@ image, specify the name and the location in the respective fields.</p>
             DirInstall::makeimage = (boolean) UI::QueryWidget (`id(`makeimage), `Value);
             DirInstall::image_name = (string) UI::QueryWidget (`id(`imagename), `Value);
             DirInstall::image_dir = (string) UI::QueryWidget (`id(`imagedir), `Value);
+	    string w_autoyast = (string)UI::QueryWidget (`id (`autoyast), `Value);
+
+	    if ((boolean)UI::QueryWidget (`id (`use_autoyast), `Value)
+		&& (DirInstall::autoyast_software != w_autoyast
+		    || ! DirInstall::use_autoyast_software))
+	    {
+		if (! ( Profile::ReadXML( w_autoyast )
+			|| AutoinstSoftware::Import(Profile::current["software"]:$[])))
+		{
+		    Report::Error (_("Failed to read the AutoYaST profile."));
+		    continue;
+		}
+		AutoinstSoftware::Write();
+	    }
+	    DirInstall::use_autoyast_software = (boolean)UI::QueryWidget (`id (`use_autoyast), `Value);
+	    DirInstall::autoyast_software = w_autoyast;
 
             if(target == "" || target == "/")
             {

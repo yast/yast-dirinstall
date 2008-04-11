@@ -7,7 +7,7 @@ Requires:	yast2 >= 2.16.7
 # Package-split
 Requires:	yast2-packager >= 2.16.3
 
-Requires:	yast2 yast2-country yast2-mouse yast2-runlevel
+Requires:	yast2 yast2-country yast2-mouse yast2-runlevel autoyast2-installation
 
 BuildRequires:	yast2 >= 2.16.7
 BuildRequires:	perl-XML-Writer update-desktop-files yast2-devtools yast2-testsuite

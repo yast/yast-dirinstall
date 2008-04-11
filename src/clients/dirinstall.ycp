@@ -110,6 +110,7 @@ symbol StartDirInstall()
 	map<string,any> prod = prods[0]:$[];
 	integer source = prod["source"]:-1;
 	map src_data = Pkg::SourceGeneralData (source);
+	y2milestone ("Repository: %1", src_data);
 	Pkg::SourceSetEnabled (source, false);
 	string url = src_data["url"]:"";
 	string dir = src_data["product_dir"]:"/";

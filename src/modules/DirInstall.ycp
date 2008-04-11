@@ -22,6 +22,8 @@ global boolean runme_at_boot = false;
 global boolean makeimage = false;
 global string image_dir = "";
 global string image_name = "";
+global boolean use_autoyast_software = false;
+global string autoyast_software = "";
 
 
 global string dirinstall_control_file =
@@ -89,6 +91,10 @@ global string Propose()
 	_("No"), color) ));
     // Proposal for dirinstall installation
     tmp = add (tmp, sformat (_("Create Image: %1"), HTML::Colorize(DirInstall::makeimage ? _("Yes"): _("No"), color) ));
+    if (use_autoyast_software)
+	// Proposal for dirinstall installation
+	tmp = add (tmp, sformat (_("Load software selection from %1"), autoyast_software));
+
     return HTML::List (tmp);
 
 }
