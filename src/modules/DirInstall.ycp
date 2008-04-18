@@ -29,12 +29,26 @@ global string autoyast_software = "";
 global string dirinstall_control_file =
         "/usr/share/YaST2/control/dirinstall.xml";
 
+boolean started = false;
+
 list<list<string> > filesystems = [
     ["/proc", "proc", "proc" ],
     ["/sys", "sysfs", "sysfs" ],
 ];
 
 list<string> mounted_fs = [];
+
+global void SetStarted(boolean status)
+{
+    started = status;
+    y2milestone("DirInstall started set to: %1", started);
+}
+
+global boolean GetStarted()
+{
+    y2milestone("DirInstall started: %1", started);
+    return started;
+}
 
 global integer GetTargetChangeTime()
 {

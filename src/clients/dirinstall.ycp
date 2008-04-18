@@ -12,6 +12,7 @@
     textdomain "dirinstall";
 
     import "CommandLine";
+    import "PackageCallbacks";
 
 symbol StartDirInstall()
 {
@@ -23,12 +24,12 @@ symbol StartDirInstall()
 
     import "DirInstall";
     import "PackageLock";
-    import "Product";
     import "Report";
     import "Progress";
-    import "Popup";
 
     include "dirinstall/ui.ycp";
+
+    DirInstall::SetStarted(false);
 
     // check whether having the packager for ourselves
     if (! PackageLock::Check ())
@@ -61,10 +62,6 @@ symbol StartDirInstall()
 	    stages, stages2, _("Please wait..."));
 
 
-    // install package callbacks
-    import "PackageCallbacksInit";
-    PackageCallbacksInit::InitPackageCallbacks();
-
     Progress::NextStage();
 
     // initializa the package manager
@@ -74,79 +71,36 @@ symbol StartDirInstall()
 
     Pkg::TargetFinish ();
     Pkg::SourceStartManager(true);
-    boolean have_patterns
-	= size (Pkg::ResolvableProperties ("", `pattern, "")) > 0;
-    boolean have_selections
-	= size (Pkg::GetSelections (`available, "base")) > 0;
-    have_patterns = have_patterns && ! have_selections;
 
     Progress::NextStage();
 
-    if (have_patterns)
-    {
-	y2milestone ("Host system is using patterns");
+    list<map<string,any> > prods = Pkg::ResolvableProperties ("", `product, "");
+    y2milestone("Found products: %1", prods);
 
-	Pkg::TargetInit ("/", false);
-	list<map<string,any> > prods = Pkg::ResolvableProperties ("", `product, "");
-	list<map<string,any> > base_l = filter (map<string,any> p, prods, {
-	    return p["category"]:"" == "base";
-	});
-	 map<string,any> base = base_l[0]:$[];
-	if (size (base_l) == 0)
-	{
-	    y2warning ("No base product found, using first found product");
-	    base = prods[0]:$[];
-	}
-	y2milestone ("Found base product: %1", base);
-	prods = Pkg::ResolvableProperties (base["name"]:"", `product, "");
-	y2milestone ("Found appropriate base products in repositories: %1", prods);
-	if (size (prods) == 0)
-	{
-	    // error report
-	    Report::Error (_("Could not read package information."));
-	    Wizard::CloseDialog();
-	    return `abort;
-	}
-	map<string,any> prod = prods[0]:$[];
-	integer source = prod["source"]:-1;
-	map src_data = Pkg::SourceGeneralData (source);
-	y2milestone ("Repository: %1", src_data);
-	Pkg::SourceSetEnabled (source, false);
-	string url = src_data["url"]:"";
-	string dir = src_data["product_dir"]:"/";
-	if (substring (url, 0, 3) == "cd:" || substring (url, 0, 4) == "dvd:")
-	{
-	    if (! Popup::ContinueCancel (sformat (_("Insert %1 CD 1"), base["summary"]:"")))
-	    {
-		Wizard::CloseDialog();
-		return `back;
-	    }
-	}
-	new_src = Pkg::SourceCreateBase (url, dir);
-	old_src = source;
-	using_patterns = true;
+    list<map<string,any> > base_l = filter (map<string,any> p, prods, {
+	return p["category"]:"" == "base";
+    });
 
-	string content_file = Pkg::SourceProvideFile (new_src, 1, "/content");
-	SCR::RegisterAgent (.media.content, `ag_ini(
-	    `IniAgent( content_file,
-	    $[
-		"options" : [ "read_only", "global_values", "flat" ],
-		"comments" : [ "^#.*", "^[ \t]*$", ],
-		"params" : [
-		    $[ "match" : [ "^[ \t]*([a-zA-Z0-9_\.]+)[ \t]*(.*)[ \t]*$", "%s %s" ] ]
-		]
-	    ]
-	)));
-	any tmp1 = SCR::Read (.media.content.PATTERNS);
-	if (tmp1 != nil)
-	    Product::patterns = splitstring ((string)tmp1, " ");
-	y2milestone ("***Patterns: %1", Product::patterns);
-	Pkg::TargetFinish ();
-    }
-    else
+    map<string,any> base = base_l[0]:$[];
+    if (size (base_l) == 0)
     {
-	y2milestone ("Host system is using selections");
+	y2warning ("No base product found, using first found product");
+	base = prods[0]:$[];
     }
+
+    y2milestone ("Found base product: %1", base);
+    prods = Pkg::ResolvableProperties (base["name"]:"", `product, "");
+    y2milestone ("Found appropriate base products in repositories: %1", prods);
+    if (size (prods) == 0)
+    {
+	// error report
+	Report::Error (_("Could not read package information."));
+	Wizard::CloseDialog();
+	return `abort;
+    }
+
+    // select the base product for installation
+    Pkg::ResolvableInstall(base["name"]:"", `product);
 
     symbol ret = Run ();
 
@@ -154,12 +108,11 @@ symbol StartDirInstall()
 
     y2milestone ("Sequence returned %1", ret);
     DirInstall::UmountFilesystems ();
-    if (using_patterns)
+
+    if (DirInstall::GetStarted())
     {
-	Pkg::SourceDelete (new_src);
-	Pkg::SourceSetEnabled (old_src, true);
+	DirInstall::FinishPackageManager ();
     }
-    DirInstall::FinishPackageManager ();
 
     Wizard::CloseDialog();
     return ret;

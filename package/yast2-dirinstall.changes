@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Fri Apr 18 08:52:12 CEST 2008 - lslezak@suse.cz
+
+- do not create a copy of the installation source
+- select a product for installation - preselect dependent patterns
+- do not store the config when abort is pressed
+- code clean up (bnc#379154)
+- 2.16.2
+
+-------------------------------------------------------------------
 Fri Apr 11 13:55:26 CEST 2008 - jsrain@suse.cz
 
 - added possiblity to load software selection from AutoYaST profile

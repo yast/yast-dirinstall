@@ -12,15 +12,10 @@
     textdomain "dirinstall";
 
     import "DirInstall";
-    import "Installation";
-    import "Directory";
-    import "Popup";
     import "SlideShow";
-    import "PackageInstallation";
-    import "PackageCallbacks";
-    import "Wizard";
-    import "Progress";
     import "String";
+
+    DirInstall::SetStarted(true);
 
     Pkg::TargetFinish ();
     DirInstall::MountFilesystems ();
@@ -34,28 +29,6 @@
     // initialize the slideshow
     SlideShow::InitPkgData(false);
 
-/*
-    if(Pkg::TargetInit (Installation::destdir,true) != true)
-    {
-	// continue-cancel popup
-        if(Popup::ContinueCancel(_("Initializing the target directory failed")) == false)
-        {
-            return `abort;
-        }
-    }
-*/
-
-    /*
-    boolean anyToDelete = Pkg::PkgAnyToDelete();
-    SlideShow::SetLanguage (UI::GetLanguage(true));
-    SlideShow::InitPkgData();
-    SlideShow::OpenSlideShowDialog();
-
-    Pkg::TargetLogfile (Installation::destdir + Directory::logdir + "/y2logRPM");
-    list commit_result = PackageInstallation::CommitPackages (0, 0);
-
-    SlideShow::CloseSlideShowDialog();
-    */
 
     return `next;
 }
