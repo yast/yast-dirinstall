@@ -77,20 +77,6 @@ symbol StartDirInstall()
     list<map<string,any> > prods = Pkg::ResolvableProperties ("", `product, "");
     y2milestone("Found products: %1", prods);
 
-    list<map<string,any> > base_l = filter (map<string,any> p, prods, {
-	return p["category"]:"" == "base";
-    });
-
-    map<string,any> base = base_l[0]:$[];
-    if (size (base_l) == 0)
-    {
-	y2warning ("No base product found, using first found product");
-	base = prods[0]:$[];
-    }
-
-    y2milestone ("Found base product: %1", base);
-    prods = Pkg::ResolvableProperties (base["name"]:"", `product, "");
-    y2milestone ("Found appropriate base products in repositories: %1", prods);
     if (size (prods) == 0)
     {
 	// error report
@@ -99,8 +85,12 @@ symbol StartDirInstall()
 	return `abort;
     }
 
-    // select the base product for installation
-    Pkg::ResolvableInstall(base["name"]:"", `product);
+    foreach(map<string,any> prod, prods,
+	{
+	    // select all products for installation
+	    Pkg::ResolvableInstall(prod["name"]:"", `product);
+	}
+    );
 
     symbol ret = Run ();
 

@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Apr 23 15:27:08 CEST 2008 - lslezak@suse.cz
+
+- install all available products, base product flag has been
+  dropped (similar problem to bnc#359538)
+- 2.16.3
+
+-------------------------------------------------------------------
 Fri Apr 18 08:52:12 CEST 2008 - lslezak@suse.cz
 
 - do not create a copy of the installation source
