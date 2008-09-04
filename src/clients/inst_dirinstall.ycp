@@ -12,7 +12,7 @@
     textdomain "dirinstall";
 
     import "DirInstall";
-    import "SlideShow";
+    import "PackageSlideShow";
     import "String";
 
     DirInstall::SetStarted(true);
@@ -27,7 +27,7 @@
     SCR::Execute(.target.bash, sformat("mknod -m 666 '%1/dev/null' c 1 3", String::Quote (DirInstall::GetTarget())));
 
     // initialize the slideshow
-    SlideShow::InitPkgData(false);
+    PackageSlideShow::InitPkgData(false);
 
 
     return `next;

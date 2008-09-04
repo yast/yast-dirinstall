@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Sep  4 15:23:43 CEST 2008 - visnov@suse.cz
+
+- adapt to SlideShow API changes 
+
+-------------------------------------------------------------------
 Fri Jun 27 12:47:27 CEST 2008 - lslezak@suse.cz
 
 - do not initialize ProductControl in the DirInstall constructor
