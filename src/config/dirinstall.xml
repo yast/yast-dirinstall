@@ -9,7 +9,7 @@
     textdomain="dirinstall"
     -->
 
-    <textdomain>packager</textdomain>
+    <textdomain>dirinstall</textdomain>
 
     <proposals config:type="list">
         <proposal>

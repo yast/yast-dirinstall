@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Nov 24 16:54:15 CET 2008 - locilka@suse.cz
+
+- Fixed control file textdomain (bnc #446123).
+- 2.17.2
+
+-------------------------------------------------------------------
 Mon Nov 24 13:54:58 CET 2008 - lslezak@suse.cz
 
 - a missing submit caused unfunctial module (bnc#447895)
