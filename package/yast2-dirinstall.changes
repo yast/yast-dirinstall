@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Nov 24 13:54:58 CET 2008 - lslezak@suse.cz
+
+- a missing submit caused unfunctial module (bnc#447895)
+- 2.17.1
+
+-------------------------------------------------------------------
 Thu Sep  4 15:23:43 CEST 2008 - visnov@suse.cz
 
 - adapt to SlideShow API changes 
