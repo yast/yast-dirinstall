@@ -7,3 +7,7 @@ control_DATA = \
 
 desktop_DATA = $(wildcard *.desktop)
 EXTRA_DIST = $(desktop_DATA) $(control_DATA)
+
+# validate the control file in 'make check' run
+check-local:
+	xmllint --relaxng $(controldir)/control.rng --noout $(control_DATA)

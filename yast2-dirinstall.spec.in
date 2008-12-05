@@ -11,7 +11,10 @@ Requires:	yast2 yast2-country yast2-mouse yast2-runlevel autoyast2-installation
 
 BuildRequires:	yast2 >= 2.16.7
 BuildRequires:	perl-XML-Writer update-desktop-files yast2-devtools yast2-testsuite
-#BuildRequires:	docbook-xsl-stylesheets doxygen libxslt sgml-skel
+# xmllint - for dirinstall.xml validation
+BuildRequires:	libxml2
+# control.rng - validation schema
+BuildRequires:  yast2-installation >= 2.17.44
 
 Provides:	/usr/share/YaST2/clients/dirinstall.ycp
 
