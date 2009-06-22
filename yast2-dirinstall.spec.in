@@ -1,6 +1,7 @@
 @HEADER-COMMENT@
 
 @HEADER@
+License: GPL v2 or later
 
 # Installation::dirinstall_target
 Requires:	yast2 >= 2.16.7
