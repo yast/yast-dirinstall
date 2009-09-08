@@ -18,6 +18,7 @@
             <mode>normal</mode>
             <name>dirinstall</name>
             <stage>normal</stage>
+	    <unique_id>dirinstall</unique_id>
             <enable_skip>no</enable_skip>
             <proposal_modules config:type="list">
                 <proposal_module>dirinstall_options</proposal_module>
