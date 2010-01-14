@@ -17,9 +17,8 @@ X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoinstResource=
 
 Icon=yast-dirinstall
-Exec=/sbin/yast2 dirinstall
+Exec=xdg-su -c "/sbin/yast2 dirinstall"
 
 Name=Installation into Directory
 GenericName=Install the system into a directory
-X-KDE-SubstituteUID=true
 StartupNotify=true
