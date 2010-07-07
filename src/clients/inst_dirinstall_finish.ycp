@@ -88,7 +88,7 @@
     Mouse::Save();
     Timezone::Save();
     Language::Save();
-    Keyboard::Save(true);
+    Keyboard::Save();
     Console::Save();
 
     integer runlevel = RunlevelEd::default_runlevel == ""?
