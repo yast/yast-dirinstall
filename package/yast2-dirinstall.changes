@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Aug  3 08:58:50 UTC 2011 - lslezak@suse.cz
+
+- use term "Software manager" instead of "Package manager"
+  (bnc#585679)
+- 2.21.0
+
+-------------------------------------------------------------------
 Wed Nov  3 13:54:23 UTC 2010 - lslezak@suse.cz
 
 - fixed package import from AutoYaST XML profile (bnc#568517)

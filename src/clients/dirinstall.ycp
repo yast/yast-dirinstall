@@ -39,7 +39,7 @@ symbol StartDirInstall()
     list<string> stages =
     [
 	// progress bar item
-	_("Initialize the Package Manager"),
+	_("Initialize the Software Manager"),
 	// progress bar item
 	_("Select Software"),
 	// progress bar item
@@ -49,7 +49,7 @@ symbol StartDirInstall()
     list<string> stages2 =
     [
 	// progress bar item
-	_("Initializing the Package Manager..."),
+	_("Initializing the Software Manager..."),
 	// progress bar item
 	_("Selecting Software..."),
 	// progress bar item

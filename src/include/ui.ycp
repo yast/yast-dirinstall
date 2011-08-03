@@ -61,7 +61,7 @@ define symbol Run () {
 	list<string> stages =
 	[
 	    // progress bar item
-	    _("Finish the Package Manager"),
+	    _("Finish the Software Manager"),
 	    // progress bar item
 	    _("Clean Up"),
 	];
@@ -69,7 +69,7 @@ define symbol Run () {
 	list<string> stages2 =
 	[
 	    // progress bar item
-	    _("Finishing the Package Manager..."),
+	    _("Finishing the Software Manager..."),
 	    // progress bar item
 	    _("Cleaning Up..."),
 	];
