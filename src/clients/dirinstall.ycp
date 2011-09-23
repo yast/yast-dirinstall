@@ -67,7 +67,6 @@ symbol StartDirInstall()
     // initializa the package manager
     integer old_src = -1;
     integer new_src = -1;
-    boolean using_patterns = false;
 
     Pkg::TargetFinish ();
     Pkg::SourceStartManager(true);
