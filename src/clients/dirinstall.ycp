@@ -20,6 +20,7 @@ symbol StartDirInstall()
     // open the dialog
     Wizard::CreateDialog();
     Wizard::SetDesktopIcon("sw_single");
+    Wizard::SetDesktopTitle("dirinstall");
     Wizard::SetContents(_("Initializing..."), `Empty (), "", false, true);
 
     import "DirInstall";
