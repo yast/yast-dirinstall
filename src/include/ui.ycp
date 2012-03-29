@@ -71,7 +71,7 @@ define symbol Run () {
 	    // progress bar item
 	    _("Finishing the Software Manager..."),
 	    // progress bar item
-	    _("Cleaning Up..."),
+	    _("Cleaning up..."),
 	];
 
 	// progres bar label
