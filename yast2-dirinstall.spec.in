@@ -20,10 +20,11 @@ Provides:	/usr/share/YaST2/clients/dirinstall.ycp
 
 BuildArchitectures:	noarch
 
-Summary:	Configuration of dirinstall
+Summary:        YaST2 - Installation into Directory
 
 %description
--
+This package contains scripts for installing a new system into separate
+directory.
 
 @PREP@
 
