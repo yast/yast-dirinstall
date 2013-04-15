@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Apr 15 11:02:22 UTC 2013 - lslezak@suse.cz
+
+- move imports/includes (to make YCP -> Ruby translation easier)
+- 2.24.0
+
+-------------------------------------------------------------------
 Mon Feb  4 13:41:15 UTC 2013 - lslezak@suse.cz
 
 - set YAST_IS_RUNNING to "instsys" to skip some actions in %post

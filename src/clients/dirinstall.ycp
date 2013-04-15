@@ -13,22 +13,21 @@
 
     import "CommandLine";
     import "PackageCallbacks";
-
-symbol StartDirInstall()
-{
     import "Wizard";
-    // open the dialog
-    Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("sw_single");
-    Wizard::SetDesktopTitle("dirinstall");
-    Wizard::SetContents(_("Initializing..."), `Empty (), "", false, true);
-
     import "DirInstall";
     import "PackageLock";
     import "Report";
     import "Progress";
 
     include "dirinstall/ui.ycp";
+
+symbol StartDirInstall()
+{
+    // open the dialog
+    Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("sw_single");
+    Wizard::SetDesktopTitle("dirinstall");
+    Wizard::SetContents(_("Initializing..."), `Empty (), "", false, true);
 
     DirInstall::SetStarted(false);
 
