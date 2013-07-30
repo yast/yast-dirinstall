@@ -5,8 +5,7 @@ controldir = $(yast2dir)/control
 control_DATA = \
 	dirinstall.xml
 
-desktop_DATA = $(wildcard *.desktop)
-EXTRA_DIST = $(desktop_DATA) $(control_DATA)
+EXTRA_DIST = $(control_DATA)
 
 # validate the control file in 'make check' run
 check-local:

@@ -23,6 +23,8 @@ Provides:	/usr/share/YaST2/clients/dirinstall.ycp
 
 BuildArchitectures:	noarch
 
+Requires:       yast2-ruby-bindings >= 1.0.0
+
 Summary:	YaST2 - Installation into Directory
 
 %description
@@ -41,7 +43,7 @@ directory.
 %defattr(-,root,root)
 %dir @yncludedir@/dirinstall
 @yncludedir@/dirinstall/*
-@clientdir@/*.ycp
+@clientdir@/*.rb
 @moduledir@/*
 @desktopdir@/*.desktop
 %dir /usr/share/YaST2/control
